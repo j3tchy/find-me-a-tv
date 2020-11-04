@@ -2,7 +2,7 @@ const fetch = require("node-fetch");
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 
-const websites = require("./data.json");
+const websites = require("./websites.json");
 
 async function scrapeForTV(url, element) {
   try {
@@ -17,8 +17,6 @@ async function scrapeForTV(url, element) {
       if (price < 799) {
         console.log(url, price);
       }
-
-      console.log(url, price);
     } catch (e) {
       console.error(e);
     }
