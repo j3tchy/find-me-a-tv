@@ -1,0 +1,9 @@
+[
+  {
+    "url": "https://www.currys.co.uk/gbuk/tv-and-home-entertainment/televisions/televisions/lg-55nano866na-55-smart-4k-ultra-hd-hdr-led-tv-with-google-assistant-amazon-alexa-10206355-pdt.html",
+    "element": "#product-actions-touch [data-key=current-price]"
+  },{
+    "url": "https://www.richersounds.com/tv-projectors/lg-55nano866na.html",
+    "element": ".price"
+  }
+]
