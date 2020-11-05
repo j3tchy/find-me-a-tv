@@ -2,13 +2,14 @@ const cron = require("node-cron");
 const fetch = require("node-fetch");
 const jsdom = require("jsdom");
 const nodemailer = require("nodemailer");
+const hbs = require("nodemailer-express-handlebars");
 const { JSDOM } = jsdom;
 
-const websites = require("./websites.json");
+const scrapper = require("./scrapper.json");
 
 require('dotenv').config();
 
-console.log("Starting Scraper");
+console.log("Initialised scrapping tool");
 
 async function scrapeForTV(url, element, retailer) {
   console.log(`Scrapping website: ${retailer}`);
@@ -30,15 +31,13 @@ async function scrapeForTV(url, element, retailer) {
         "url": url,
         "price": currentPriceText
       }
-      
-
     } catch (e) {
       console.error(e);
     }
 }
 
 const tvDetails = async () => {
-  const websiteDetails = await websites.map(async ({ url, element, retailer }) => {
+  const websiteDetails = await scrapper.websites.map(async ({ url, element, retailer }) => {
     const scraperDetails = await scrapeForTV(url, element, retailer);
 
     return scraperDetails;
@@ -55,25 +54,30 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+const options = {
+  viewEngine: {
+    layoutsDir: __dirname + "/views/layouts",
+    extname: ".hbs"
+  },
+  extName: ".hbs",
+  viewPath: "views"
+};
+
+transporter.use("compile", hbs(options));
+
 cron.schedule('0 */4 * * *', () => {
-  tvDetails().then(tableData => {  
-    const content = tableData.reduce((prev, curr) => {
-      return prev + '<tr><td><a href="' + curr.url + '">' + curr.retailer + '</a></td><td>' + curr.price + '</td></tr>'
-    }, '')
-  
+  tvDetails().then(tableData => {
+    const productDetails = {
+      name: scrapper.product,
+      websiteData: tableData,
+    }
+
     const mailOptions = {
       from: process.env.SENDER_EMAIL,
       to: process.env.RECEPIENT_EMAIL,
-      subject: 'TV Updates',
-      html: `
-        <table border="1" width="75%">
-          <tr>
-            <th>Retailer</th>
-            <th>Price</th>
-          </tr>
-          ${content}
-        </table>
-      `
+      subject: `Alert | ${productDetails.name}`,
+      template: "scrapperLinks",
+      context: productDetails,
     };
   
     transporter.sendMail(mailOptions, function(error, info){
@@ -87,4 +91,3 @@ cron.schedule('0 */4 * * *', () => {
     });
   });
 });
-

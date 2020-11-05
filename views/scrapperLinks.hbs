@@ -1,0 +1,17 @@
+<h1>Product: {{name}}</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Retailer</th>
+      <th>Price</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each websiteData}}
+      <tr>
+        <td><a href={{url}}>{{retailer}}</a></td>
+        <td>{{price}}</td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
