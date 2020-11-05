@@ -8,7 +8,11 @@ const websites = require("./websites.json");
 
 require('dotenv').config();
 
+console.log("Starting Scraper");
+
 async function scrapeForTV(url, element, retailer) {
+  console.log(`Scrapping website: ${retailer}`);
+
   try {
       const response = await fetch(url);
       const text = await response.text();
