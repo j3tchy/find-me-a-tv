@@ -7,15 +7,6 @@ const websites = require("./websites.json");
 
 require('dotenv').config();
 
-const transporter = nodemailer.createTransport({
-  service: "hotmail",
-  auth: {
-      user: process.env.SENDER_EMAIL,
-      pass: process.env.SENDER_PASS
-  }
-});
-
-
 async function scrapeForTV(url, element) {
   try {
       const response = await fetch(url);
@@ -27,32 +18,62 @@ async function scrapeForTV(url, element) {
         return console.log(`Unable to retrieve price from ${url}`)
       }
 
-      const currentPriceText = currentPrice.textContent;
-      const stripOutPoundSign = currentPriceText.replace(/£/gm, "");
-      const price = Number(stripOutPoundSign.split('.')[0]);
+      const currentPriceText = currentPrice.textContent.trim();
 
-      const mailOptions = {
-        from: process.env.SENDER_EMAIL,
-        to: process.env.RECEPIENT_EMAIL,
-        subject: 'TV Updates',
-        text: `${url}: ${currentPriceText}`
-      };
+      return {
+        "url": url,
+        "price": currentPriceText
+      }
       
 
-      if (price < 799) {
-        transporter.sendMail(mailOptions, function(error, info){
-          if (error) {
-            console.log(error);
-          } else {
-            console.log('Email sent: ' + info.response);
-          }
-        });
-      }
     } catch (e) {
       console.error(e);
     }
-
-    return "here";
 }
 
-websites.forEach(({ url, element }) => scrapeForTV(url, element));
+const tvDetails = async () => {
+  const websiteDetails = await websites.map(async ({ url, element }) => {
+    const scraperDetails = await scrapeForTV(url, element);
+
+    return scraperDetails;
+  })
+
+  return Promise.all(websiteDetails);
+}
+
+const transporter = nodemailer.createTransport({
+  service: "hotmail",
+  auth: {
+      user: process.env.SENDER_EMAIL,
+      pass: process.env.SENDER_PASS
+  }
+});
+
+tvDetails().then(tableData => {
+  const content = tableData.reduce((prev, curr) => {
+    return prev + '<tr><td>' + curr.url + '</td><td>' + curr.price + '</td></tr>'
+  }, '')
+
+  const mailOptions = {
+    from: process.env.SENDER_EMAIL,
+    to: process.env.RECEPIENT_EMAIL,
+    subject: 'TV Updates',
+    html: `
+      <table border="1" width="75%">
+        <tr>
+          <th>URL</th>
+          <th>Price</th>
+        </tr>
+        ${content}
+      </table>
+    `
+  };
+
+  transporter.sendMail(mailOptions, function(error, info){
+    if (error) {
+      console.log(error);
+    } else {
+      console.log('Email sent: ' + info.response);
+    }
+  });
+});
