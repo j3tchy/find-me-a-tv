@@ -7,7 +7,7 @@ const websites = require("./websites.json");
 
 require('dotenv').config();
 
-var transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
   service: "hotmail",
   auth: {
       user: process.env.SENDER_EMAIL,
@@ -15,12 +15,6 @@ var transporter = nodemailer.createTransport({
   }
 });
 
-const mailOptions = {
-  from: process.env.SENDER_EMAIL,
-  to: process.env.RECEPIENT_EMAIL,
-  subject: 'TV Updates',
-  text: 'That was easy!'
-};
 
 async function scrapeForTV(url, element) {
   try {
@@ -37,16 +31,22 @@ async function scrapeForTV(url, element) {
       const stripOutPoundSign = currentPriceText.replace(/£/gm, "");
       const price = Number(stripOutPoundSign.split('.')[0]);
 
-      transporter.sendMail(mailOptions, function(error, info){
-        if (error) {
-          console.log(error);
-        } else {
-          console.log('Email sent: ' + info.response);
-        }
-      });
+      const mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: process.env.RECEPIENT_EMAIL,
+        subject: 'TV Updates',
+        text: `${url}: ${currentPriceText}`
+      };
+      
 
       if (price < 799) {
-        console.log(url, price);
+        transporter.sendMail(mailOptions, function(error, info){
+          if (error) {
+            console.log(error);
+          } else {
+            console.log('Email sent: ' + info.response);
+          }
+        });
       }
     } catch (e) {
       console.error(e);
