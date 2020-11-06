@@ -21,7 +21,11 @@ async function scrapeForTV(url, element, retailer) {
       const currentPrice = dom.window.document.querySelector(element);
 
       if (currentPrice === null) {
-        return console.log(`Unable to retrieve price from ${url}`)
+        return {
+          "retailer": `${retailer}: Unable to retrieve price`,
+          "url": null,
+          "price": "N/A",
+        }
       }
 
       const currentPriceText = currentPrice.textContent.trim();
